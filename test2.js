@@ -1,5 +1,4 @@
 const { fork, exec } = require('child_process');
-const fileSync = require('tmp').fileSync;
 const writeFileSync = require('fs').writeFileSync;
 
 
