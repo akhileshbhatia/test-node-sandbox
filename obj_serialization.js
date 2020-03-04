@@ -15,10 +15,9 @@ const stringified = JSON.stringify(obj, (key, val) => {
   return (typeof val == 'function') ? val.toString() : val;
 },2);
 
-const lodashified = lodash.cloneDeepWith(obj, function(val) {
-  // console.log(val);
-  if (typeof val == 'function') {
-    return val.toString();
+const lodashified = lodash.cloneDeepWith(obj, function(value) {
+  if (typeof value == 'function') {
+    return value.toString();
   }
 });
 
