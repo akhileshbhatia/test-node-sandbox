@@ -7,6 +7,8 @@ while(true) {
   console.log('inside the infinite loop');
 }`;
 
+const testError = `testerrorhere++;`
+
 function createTempFile(script, sandboxObjects={}, canRequire=false){
   const require = canRequire ? {
     builtin: ['util'],
@@ -16,23 +18,34 @@ function createTempFile(script, sandboxObjects={}, canRequire=false){
   const nodeVm = new NodeVM(
     {sandbox: ${JSON.stringify(sandboxObjects)}, 
     require: ${JSON.stringify(require)}});
-  const val = nodeVm.run(\`module.exports = ${script}\`);
-  process.send({msg: val});`;
+    try {
+      const val = nodeVm.run(\`module.exports = ${script}\`,__filename);
+      process.send({msg: val});
+    } catch(err){
+      process.send({err: err.message});
+    }
+  `;
   writeFileSync('generated_file.js', fileContents);
 }
 
-createTempFile(infiniteLoop);
+createTempFile(testError);
+
 const forked = fork('generated_file');
 
 const timeoutId = setTimeout(() => {
   forked.kill();
   console.log('killed after 1 sec')
   clearTimeout(timeoutId);
-},1000);
+},100);
 
 forked.on('message', (response) => {
+  if (response.err) {
+    console.log('Error here ', response.err);
+    clearTimeout(timeoutId);
+    return;
+  }
   const { msg } = response;
   console.log('message from child => ',msg);
   clearTimeout(timeoutId);
-  console.log('cleared timeout');
 });
+
